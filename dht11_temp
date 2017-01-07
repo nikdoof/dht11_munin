@@ -1,0 +1,33 @@
+#!/usr/bin/python
+import sys
+import Adafruit_DHT
+import os
+from munin import MuninPlugin
+
+class DHT11Plugin(MuninPlugin):
+    title = "DHT11 Temperature"
+    args = "--base 1000 -l 0"
+    vlabel = "degrees celcius"
+    scale = False
+    category = "sensors"
+
+    @property
+    def fields(self):
+        warning = os.environ.get('temp_warn', 30)
+        critical = os.environ.get('temp_crit', 60)
+        return [("temp", dict(
+                label = "Temperature",
+                info = 'Temperature as reported by a DHT11 sensor',
+                type = "GAUGE",
+                min = "-20",
+                warning = str(warning),
+                critical = str(critical)))]
+
+    def execute(self):
+        pin = int(os.environ.get('dht11_pin', 2))
+        humidity, temperature = Adafruit_DHT.read_retry(Adafruit_DHT.DHT11, pin)
+        return dict(temp=temperature)
+
+if __name__ == "__main__":
+    DHT11Plugin().run()
+
